@@ -33,7 +33,8 @@ allTests =
                        , _typeParameters = []}
        in bst `shouldBe` ti
     it "tests with custom type Foo" $
-      let bst = bridgeSumType (buildBridge defaultBridge) (mkSumType (Proxy :: Proxy Foo))
+      let prox = Proxy :: Proxy Foo
+          bst = bridgeSumType (buildBridge defaultBridge) (order prox $ mkSumType prox)
           st = SumType
                 TypeInfo { _typePackage = "" , _typeModule = "TestData" , _typeName = "Foo" , _typeParameters = [] }
                 [ DataConstructor { _sigConstructor = "Foo" , _sigValues = Left [] }
@@ -48,9 +49,11 @@ allTests =
                                       ]
                   }
                 ]
+                [Eq, Ord, Generic]
        in bst `shouldBe` st
     it "tests generation of for custom type Foo" $
-     let recType = bridgeSumType (buildBridge defaultBridge) (mkSumType (Proxy :: Proxy Foo))
+     let prox = Proxy :: Proxy Foo
+         recType = bridgeSumType (buildBridge defaultBridge) (order prox $ mkSumType prox)
          recTypeText = sumTypeToText recType
          txt = T.stripEnd $
                T.unlines [ "data Foo ="
@@ -58,8 +61,9 @@ allTests =
                          , "  | Bar Int"
                          , "  | FooBar Int String"
                          , ""
+                         , "derive instance eqFoo :: Eq Foo"
+                         , "derive instance ordFoo :: Ord Foo"
                          , "derive instance genericFoo :: Generic Foo _"
-                         , ""
                          , ""
                          , "--------------------------------------------------------------------------------"
                          , "_Foo :: Prism' Foo Unit"
@@ -91,15 +95,13 @@ allTests =
                           , "module TestData where"
                           , ""
                           , "import Data.Either (Either)"
+                          , "import Data.Generic.Rep (class Generic)"
                           , "import Data.Lens (Iso', Lens', Prism', lens, prism')"
                           , "import Data.Lens.Iso.Newtype (_Newtype)"
                           , "import Data.Lens.Record (prop)"
                           , "import Data.Maybe (Maybe, Maybe(..))"
                           , "import Data.Newtype (class Newtype)"
                           , "import Data.Symbol (SProxy(SProxy))"
-                          , ""
-                          , "import Prelude"
-                          , "import Data.Generic.Rep (class Generic)"
                           , ""
                           , "data Bar a b m c ="
                           , "    Bar1 (Maybe a)"
@@ -110,7 +112,6 @@ allTests =
                           , "    }"
                           , ""
                           , "derive instance genericBar :: Generic (Bar a b m c) _"
-                          , ""
                           , ""
                           , "--------------------------------------------------------------------------------"
                           , "_Bar1 :: forall a b m c. Prism' (Bar a b m c) (Maybe a)"
@@ -216,9 +217,7 @@ allTests =
                           , "    }"
                           , ""
                           , "derive instance genericSingleRecord :: Generic (SingleRecord a b) _"
-                          , ""
                           , "derive instance newtypeSingleRecord :: Newtype (SingleRecord a b) _"
-                          , ""
                           , ""
                           , "--------------------------------------------------------------------------------"
                           , "_SingleRecord :: forall a b. Iso' (SingleRecord a b) { _a :: a, _b :: b, c :: String}"
@@ -241,9 +240,7 @@ allTests =
                           , "    SomeNewtype Int"
                           , ""
                           , "derive instance genericSomeNewtype :: Generic SomeNewtype _"
-                          , ""
                           , "derive instance newtypeSomeNewtype :: Newtype SomeNewtype _"
-                          , ""
                           , ""
                           , "--------------------------------------------------------------------------------"
                           , "_SomeNewtype :: Iso' SomeNewtype Int"
@@ -259,9 +256,7 @@ allTests =
                           , "    SingleValueConstr Int"
                           , ""
                           , "derive instance genericSingleValueConstr :: Generic SingleValueConstr _"
-                          , ""
                           , "derive instance newtypeSingleValueConstr :: Newtype SingleValueConstr _"
-                          , ""
                           , ""
                           , "--------------------------------------------------------------------------------"
                           , "_SingleValueConstr :: Iso' SingleValueConstr Int"
@@ -277,7 +272,6 @@ allTests =
                           , "    SingleProduct String Int"
                           , ""
                           , "derive instance genericSingleProduct :: Generic SingleProduct _"
-                          , ""
                           , ""
                           , "--------------------------------------------------------------------------------"
                           , "_SingleProduct :: Prism' SingleProduct { a :: String, b :: Int }"
