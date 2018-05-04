@@ -102,6 +102,7 @@ allTests =
                           , "import Data.Maybe (Maybe, Maybe(..))"
                           , "import Data.Newtype (class Newtype)"
                           , "import Data.Symbol (SProxy(SProxy))"
+                          , "import Prelude (($))"
                           , ""
                           , "data Bar a b m c ="
                           , "    Bar1 (Maybe a)"

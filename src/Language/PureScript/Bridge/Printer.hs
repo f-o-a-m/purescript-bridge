@@ -63,7 +63,7 @@ moduleToText m = T.unlines $
   ++ [""] -- whitespace
   ++ map sumTypeToText (psTypes m)
   where
-    otherImports = importsFromList (_lensImports ++ _genericImports)
+    otherImports = importsFromList (_lensImports ++ _genericImports ++ _alwaysImport)
     allImports = Map.elems $ mergeImportLines otherImports (psImportLines m)
 
 _lensImports :: [ImportLine]
@@ -80,6 +80,9 @@ _genericImports :: [ImportLine]
 _genericImports =
   [ ImportLine "Data.Generic.Rep" $ Set.fromList ["class Generic"]
   ]
+
+_alwaysImport :: [ImportLine]
+_alwaysImport = [ImportLine "Prelude" $ Set.singleton "($)"]
 
 importLineToText :: ImportLine -> Text
 importLineToText l = "import " <> importModule l <> " (" <> typeList <> ")"
