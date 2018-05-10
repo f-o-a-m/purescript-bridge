@@ -128,13 +128,16 @@ instances :: SumType 'PureScript -> [Text]
 instances (SumType t _ is) = map go is
   where
     go :: Instance -> Text
-    go i = "derive instance " <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
+    go i = declIntro i <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
       where
         c = T.pack $ show i
         postfix Newtype = " _"
         postfix Generic = " _"
         postfix _ = ""
-        impl ins = maybe "" ((<>) "\n\t") (impl' ins)
+        declIntro EncodeJson = "instance "
+        declIntro DecodeJson = "instance "
+        declIntro _ = "derive instance "
+        impl ins = maybe "" ((<>) " where\n  ") (impl' ins)
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
         impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
         impl' _ = Nothing
