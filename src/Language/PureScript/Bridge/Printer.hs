@@ -84,12 +84,14 @@ _genericImports =
 _encodeJsonImports :: [ImportLine]
 _encodeJsonImports =
   [ ImportLine "Data.Argonaut.Aeson.Encode.Generic" $ Set.fromList ["genericEncodeAeson"]
+  , ImportLine "Data.Argonaut.Aeson.Options" $ Set.fromList ["defaultOptions"]
   , ImportLine "Data.Argonaut" $ Set.fromList ["class EncodeJson, encodeJson"]
   ]
 
 _decodeJsonImports :: [ImportLine]
 _decodeJsonImports =
   [ ImportLine "Data.Argonaut.Aeson.Decode.Generic" $ Set.fromList ["genericDecodeAeson"]
+  , ImportLine "Data.Argonaut.Aeson.Options" $ Set.fromList ["defaultOptions"]
   , ImportLine "Data.Argonaut" $ Set.fromList ["class DecodeJson, decodeJson"]
   ]
 
