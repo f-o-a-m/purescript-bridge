@@ -63,7 +63,7 @@ moduleToText m = T.unlines $
   ++ [""] -- whitespace
   ++ map sumTypeToText (psTypes m)
   where
-    otherImports = importsFromList (_lensImports ++ _genericImports ++ _alwaysImport)
+    otherImports = importsFromList (_lensImports ++ _genericImports ++ _encodeJsonImports ++ _decodeJsonImports ++ _alwaysImport)
     allImports = Map.elems $ mergeImportLines otherImports (psImportLines m)
 
 _lensImports :: [ImportLine]
@@ -79,6 +79,18 @@ _lensImports = [
 _genericImports :: [ImportLine]
 _genericImports =
   [ ImportLine "Data.Generic.Rep" $ Set.fromList ["class Generic"]
+  ]
+
+_encodeJsonImports :: [ImportLine]
+_encodeJsonImports =
+  [ ImportLine "Data.Argonaut.Aeson.Encode.Generic" $ Set.fromList ["genericEncodeAeson"]
+  , ImportLine "Data.Argonaut" $ Set.fromList ["class EncodeJson, encodeJson"]
+  ]
+
+_decodeJsonImports :: [ImportLine]
+_decodeJsonImports =
+  [ ImportLine "Data.Argonaut.Aeson.Decode.Generic" $ Set.fromList ["genericDecodeAeson"]
+  , ImportLine "Data.Argonaut" $ Set.fromList ["class DecodeJson, decodeJson"]
   ]
 
 _alwaysImport :: [ImportLine]
@@ -114,11 +126,16 @@ instances :: SumType 'PureScript -> [Text]
 instances (SumType t _ is) = map go is
   where
     go :: Instance -> Text
-    go i = "derive instance " <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i
-      where c = T.pack $ show i
-            postfix Newtype = " _"
-            postfix Generic = " _"
-            postfix _ = ""
+    go i = "derive instance " <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
+      where
+        c = T.pack $ show i
+        postfix Newtype = " _"
+        postfix Generic = " _"
+        postfix _ = ""
+        impl ins = maybe "" ((<>) "\n\t") (impl' ins)
+        impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
+        impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
+        impl' _ = Nothing
 
 sumTypeToOptics :: SumType 'PureScript -> Text
 sumTypeToOptics st = constructorOptics st <> recordOptics st
