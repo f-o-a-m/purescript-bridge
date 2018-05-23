@@ -97,7 +97,7 @@ _decodeJsonImports =
   ]
 
 _alwaysImport :: [ImportLine]
-_alwaysImport = [ImportLine "Prelude" $ Set.singleton "($)"]
+_alwaysImport = [ImportLine "Prelude" $ Set.fromList ["($)", "Show", "Eq", "Ord"]]
 
 importLineToText :: ImportLine -> Text
 importLineToText l = "import " <> importModule l <> " (" <> typeList <> ")"
