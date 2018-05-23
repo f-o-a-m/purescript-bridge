@@ -4,6 +4,7 @@
 
 module Language.PureScript.Bridge.Printer where
 
+import           Prelude as P
 import           Control.Lens
 import           Control.Monad
 import           Data.Map.Strict (Map)
@@ -130,7 +131,7 @@ instances (SumType t _ is) = map go is
     go :: Instance -> Text
     go i = declIntro i <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
       where
-        c = T.pack $ show i
+        c = T.pack $ P.show i
         postfix Newtype = " _"
         postfix Generic = " _"
         postfix _ = ""

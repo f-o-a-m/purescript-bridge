@@ -11,7 +11,7 @@
 module Language.PureScript.Bridge.SumType (
   SumType (..)
 , mkSumType
-, equal, order
+, equal, order, show
 , DataConstructor (..)
 , RecordEntry (..)
 , Instance(..)
@@ -26,6 +26,8 @@ module Language.PureScript.Bridge.SumType (
 , recValue
 ) where
 
+
+import           Prelude hiding (show)
 import           Control.Lens hiding (from, to)
 import           Data.List (nub)
 import           Data.Maybe (maybeToList)
@@ -60,7 +62,7 @@ mkSumType p = SumType (mkTypeInfo p) constructors (Generic : EncodeJson : Decode
     constructors = gToConstructors (from (undefined :: t))
 
 -- | Purescript typeclass instances that can be generated for your Haskell types.
-data Instance = EncodeJson | DecodeJson | Generic | Newtype | Eq | Ord deriving (Eq, Show)
+data Instance = EncodeJson | DecodeJson | Generic | Newtype | Eq | Ord | Show deriving (Eq, Show)
 
 -- | The Purescript typeclass `Newtype` might be derivable if the original
 -- Haskell type was a simple type wrapper.
@@ -79,6 +81,9 @@ equal _ (SumType ti dc is) = SumType ti dc . nub $ Eq : is
 -- | Ensure that both `Eq` and `Ord` instances are generated for your type.
 order :: Ord a => Proxy a -> SumType t -> SumType t
 order _ (SumType ti dc is) = SumType ti dc . nub $ Eq : Ord : is
+
+show :: Show a => Proxy a -> SumType t -> SumType t
+show _ (SumType ti dc is) = SumType ti dc . nub $ Show : is
 
 data DataConstructor (lang :: Language) =
   DataConstructor { _sigConstructor :: !Text -- ^ e.g. `Left`/`Right` for `Either`
