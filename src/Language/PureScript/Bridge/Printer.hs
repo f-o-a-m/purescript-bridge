@@ -64,7 +64,7 @@ moduleToText m = T.unlines $
   ++ [""] -- whitespace
   ++ map sumTypeToText (psTypes m)
   where
-    otherImports = importsFromList (_lensImports ++ _genericImports ++ _encodeJsonImports ++ _decodeJsonImports ++ _alwaysImport)
+    otherImports = importsFromList (_lensImports ++ _genericImports ++ _encodeJsonImports ++ _decodeJsonImports ++ _showImports ++ _alwaysImport)
     allImports = Map.elems $ mergeImportLines otherImports (psImportLines m)
 
 _lensImports :: [ImportLine]
@@ -96,8 +96,14 @@ _decodeJsonImports =
   , ImportLine "Data.Argonaut" $ Set.fromList ["class DecodeJson, decodeJson"]
   ]
 
+_showImports :: [ImportLine]
+_showImports =
+  [ ImportLine "Data.Generic.Rep.Show" $ Set.singleton "genericShow"
+  , ImportLine "Data.Show" $ Set.singleton "class Show"
+  ]
+
 _alwaysImport :: [ImportLine]
-_alwaysImport = [ImportLine "Prelude" $ Set.fromList ["($)", "Show", "Eq", "Ord"]]
+_alwaysImport = [ImportLine "Prelude" $ Set.singleton "($)"]
 
 importLineToText :: ImportLine -> Text
 importLineToText l = "import " <> importModule l <> " (" <> typeList <> ")"
@@ -141,6 +147,7 @@ instances (SumType t _ is) = map go is
         impl ins = maybe "" ((<>) " where\n  ") (impl' ins)
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
         impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
+        impl' Show = Just $ "show = genericShow"
         impl' _ = Nothing
 
 sumTypeToOptics :: SumType 'PureScript -> Text
