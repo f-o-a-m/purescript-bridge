@@ -4,6 +4,7 @@
 
 module Language.PureScript.Bridge.Printer where
 
+import           Prelude as P
 import           Control.Lens
 import           Control.Monad
 import           Data.Map.Strict (Map)
@@ -63,7 +64,7 @@ moduleToText m = T.unlines $
   ++ [""] -- whitespace
   ++ map sumTypeToText (psTypes m)
   where
-    otherImports = importsFromList (_lensImports ++ _genericImports ++ _encodeJsonImports ++ _decodeJsonImports ++ _alwaysImport)
+    otherImports = importsFromList (_lensImports ++ _genericImports ++ _encodeJsonImports ++ _decodeJsonImports ++ _showImports ++ _alwaysImport)
     allImports = Map.elems $ mergeImportLines otherImports (psImportLines m)
 
 _lensImports :: [ImportLine]
@@ -93,6 +94,12 @@ _decodeJsonImports =
   [ ImportLine "Data.Argonaut.Aeson.Decode.Generic" $ Set.fromList ["genericDecodeAeson"]
   , ImportLine "Data.Argonaut.Aeson.Options" $ Set.fromList ["defaultOptions"]
   , ImportLine "Data.Argonaut" $ Set.fromList ["class DecodeJson, decodeJson"]
+  ]
+
+_showImports :: [ImportLine]
+_showImports =
+  [ ImportLine "Data.Generic.Rep.Show" $ Set.singleton "genericShow"
+  , ImportLine "Data.Show" $ Set.singleton "class Show"
   ]
 
 _alwaysImport :: [ImportLine]
@@ -130,16 +137,18 @@ instances (SumType t _ is) = map go is
     go :: Instance -> Text
     go i = declIntro i <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
       where
-        c = T.pack $ show i
+        c = T.pack $ P.show i
         postfix Newtype = " _"
         postfix Generic = " _"
         postfix _ = ""
         declIntro EncodeJson = "instance "
         declIntro DecodeJson = "instance "
+        declIntro Show = "instance "
         declIntro _ = "derive instance "
         impl ins = maybe "" ((<>) " where\n  ") (impl' ins)
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
         impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
+        impl' Show = Just $ "show = genericShow"
         impl' _ = Nothing
 
 sumTypeToOptics :: SumType 'PureScript -> Text
