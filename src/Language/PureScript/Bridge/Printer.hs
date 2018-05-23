@@ -143,6 +143,7 @@ instances (SumType t _ is) = map go is
         postfix _ = ""
         declIntro EncodeJson = "instance "
         declIntro DecodeJson = "instance "
+        declIntro Show = "instance "
         declIntro _ = "derive instance "
         impl ins = maybe "" ((<>) " where\n  ") (impl' ins)
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
