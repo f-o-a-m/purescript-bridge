@@ -144,9 +144,10 @@ instances (SumType t _ is) = map go is
         preds EncodeJson = encodePredicates
         preds DecodeJson = decodePredicates
         preds _ = ""
+        maybeAddArrow as = if as == [] then (<> "") else (<> " => ")
         typeParams = map (typeInfoToText False) (_typeParameters t)
-        encodePredicates = T.intercalate " => " (map ("EncodeJson " <>) typeParams) <> " => "
-        decodePredicates = T.intercalate " => " (map ("DecodeJson " <>) typeParams) <> " => "
+        encodePredicates = maybeAddArrow typeParams $ T.intercalate " => " (map ("EncodeJson " <>) typeParams)
+        decodePredicates = maybeAddArrow typeParams $ T.intercalate " => " (map ("DecodeJson " <>) typeParams)
 
 sumTypeToOptics :: SumType 'PureScript -> Text
 sumTypeToOptics st = constructorOptics st <> recordOptics st
