@@ -79,6 +79,8 @@ _lensImports = [
 _genericImports :: [ImportLine]
 _genericImports =
   [ ImportLine "Data.Generic.Rep" $ Set.fromList ["class Generic"]
+  , ImportLine "Data.Generic.Rep.Show" $ Set.fromList ["genericShow"]
+  , ImportLine "Data.Generic.Rep.Eq" $ Set.fromList ["genericEq"]
   ]
 
 _encodeJsonImports :: [ImportLine]
@@ -140,14 +142,17 @@ instances (SumType t _ is) = map go is
         impl ins = maybe "" ((<>) " where\n  ") (impl' ins)
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
         impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
+        impl' Show = Just $ "show = genericShow"
+        impl' Eq = Just $ "eq = genericEq"
         impl' _ = Nothing
-        preds EncodeJson = encodePredicates
-        preds DecodeJson = decodePredicates
+        preds EncodeJson = addPredicates "EncodeJson"
+        preds DecodeJson = addPredicates "DecodeJson"
+        preds Show = addPredicates "Show"
+        preds Eq = addPredicates "Eq"
         preds _ = ""
         maybeAddArrow as = if as == [] then (<> "") else (<> " => ")
         typeParams = map (typeInfoToText False) (_typeParameters t)
-        encodePredicates = maybeAddArrow typeParams $ T.intercalate " => " (map ("EncodeJson " <>) typeParams)
-        decodePredicates = maybeAddArrow typeParams $ T.intercalate " => " (map ("DecodeJson " <>) typeParams)
+        addPredicates p = maybeAddArrow typeParams $ T.intercalate " => " (map ((p <> " ") <>) typeParams)
 
 sumTypeToOptics :: SumType 'PureScript -> Text
 sumTypeToOptics st = constructorOptics st <> recordOptics st
