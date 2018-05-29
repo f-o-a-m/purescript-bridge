@@ -128,7 +128,7 @@ instances :: SumType 'PureScript -> [Text]
 instances (SumType t _ is) = map go is
   where
     go :: Instance -> Text
-    go i = declIntro i <> T.toLower c <> _typeName t <> " :: " <> c <> " " <> typeInfoToText False t <> postfix i <> impl i
+    go i = declIntro i <> T.toLower c <> _typeName t <> " :: " <> preds i <> " "<> c <> " " <> typeInfoToText False t <> postfix i <> impl i
       where
         c = T.pack $ show i
         postfix Newtype = " _"
@@ -141,6 +141,12 @@ instances (SumType t _ is) = map go is
         impl' EncodeJson = Just $ "encodeJson = genericEncodeAeson defaultOptions"
         impl' DecodeJson = Just $ "decodeJson = genericDecodeAeson defaultOptions"
         impl' _ = Nothing
+        preds EncodeJson = encodePredicates
+        preds DecodeJson = decodePredicates
+        preds _ = ""
+        typeParams = map (typeInfoToText False) (_typeParameters t)
+        encodePredicates = T.intercalate " => " (map ("EncodeJson " <>) typeParams) <> " => "
+        decodePredicates = T.intercalate " => " (map ("DecodeJson " <>) typeParams) <> " => "
 
 sumTypeToOptics :: SumType 'PureScript -> Text
 sumTypeToOptics st = constructorOptics st <> recordOptics st
